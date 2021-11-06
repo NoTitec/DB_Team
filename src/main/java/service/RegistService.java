@@ -18,7 +18,7 @@ public class RegistService {
         String count=registDAO.check_student_dao(id,password);
         return count;
     }
-    public void regist(String id,String password){//수강신청 메소드
+    public void regist(String id,String password){//수강신청 로직
         String check=check_student(id,password);
         if(check.equals("0")){
             System.out.println("id또는 비밀번호가 틀렸습니다");
@@ -98,12 +98,12 @@ public class RegistService {
         }
     }
 
-    public List<CreatedsubjectDTO>getmysubject(String id,String password){//현재학생 수강신청 정보 조회
+    public List<CreatedsubjectDTO>getmysubject(String id,String password){//현재학생 수강신청 정보 조회 로직
         List<CreatedsubjectDTO> stusubject=new ArrayList<>();//새로운 빈 리스트 생성
         String check=check_student(id,password);
         if(check.equals("0")){
             System.out.println("id또는 비밀번호가 틀렸습니다");
-            return null;//null 들어있음
+            return stusubject;
         }
         else{
             System.out.println("--------------");
@@ -124,5 +124,43 @@ public class RegistService {
             }
         }
         return stusubject;//수강하고있는과목이 없으면 빈 리스트임
+    }
+    public void deletemysubject(String id, String password){//현재학생 수강 취소 로직
+        String check=check_student(id,password);
+        if(check.equals("0")){
+            System.out.println("id또는 비밀번호가 틀렸습니다");
+            return ;
+        }
+        else
+        {
+            System.out.println("--------------");
+            System.out.println("학생 로그인 성공");
+            System.out.println("--------------");
+            System.out.println("수강목록조회시작");
+            //수강하고있는 강의목록 출력
+            StudentDTO getstudent=registDAO.get_student_by_id_password(id, password);//현재학생
+            int stunum=getstudent.getStunum();//현재학생 학번
+            List<AppliedregistDTO> studentapplylist= registDAO.get_same_with_stunum(stunum);//현재학생 수강 리스트
+            if(studentapplylist.size()==0){
+                System.out.println("수강신청한 과목이 없습니다");
+                return;
+            }
+            for (AppliedregistDTO one:studentapplylist) {
+                String onesubcode=one.getFcreatedsubcode();
+                CreatedsubjectDTO onesubject= registDAO.get_one_by_created_code(onesubcode);
+                System.out.println("신청 목록");
+                System.out.println(onesubject.toString());
+            }
+            //강의 1개 선택
+            System.out.println("---------------------------");
+            //신청 과목 선택(선택했다고 가정 하드코딩)
+            System.out.println("학생이 CS0016 선택했다고 가정");
+            String selectsubject="CS0016";//현재 선택한 교과목 코드
+            System.out.println("---------------------------");
+
+            //삭제
+            registDAO.delete_current_select_subject(selectsubject);
+            return;
+        }
     }
 }

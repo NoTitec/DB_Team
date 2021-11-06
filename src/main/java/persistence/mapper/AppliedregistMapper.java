@@ -25,4 +25,7 @@ public interface AppliedregistMapper {
             "VALUES (#{fcreatedsubcode}, #{fstunum})")
     @Options(useGeneratedKeys = true, keyProperty = "applyautonum")
     void insert_stu_select_subject(AppliedregistDTO a);
+
+    @Delete("DELETE FROM APPLIEDREGIST WHERE created_subcode LIKE #{subcode}")
+    void deleteselect_apply_subject(String subcode);
 }

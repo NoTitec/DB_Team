@@ -160,4 +160,23 @@ public class RegistDAO {
         }
         return "신청정상처리";
     }
+    //수강신청 테이블 선택과목 삭제 function
+    public void delete_current_select_subject(String selectsubject){
+        SqlSession session = sqlSessionFactory.openSession();
+        AppliedregistMapper mapper = session.getMapper(AppliedregistMapper.class);
+        try{
+
+            mapper.deleteselect_apply_subject(selectsubject);
+            session.commit();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            session.rollback();
+            session.close();
+            return;
+        }
+        finally {
+            session.close();
+        }
+    }
 }

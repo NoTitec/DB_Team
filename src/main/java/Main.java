@@ -49,7 +49,7 @@ public class Main {
                     break;
                 case 4:
                     System.out.println("원하는 소분류 기능 선택");
-                    System.out.println("1.수강신청2.수강조회3.수강삭제");
+                    System.out.println("1.수강신청2.수강조회3.수강삭제 4.교수 자신과목 신청학생 조회");
                     System.out.println("교과목 수강신청학생목록조회");
                     int fourthmenu = sc.nextInt();
                     String id = "kumid";
@@ -69,6 +69,14 @@ public class Main {
                             List<CreatedsubjectDTO> r = registService.getmysubject(id, password);
                             registView.print_stu_subject(r);
                             System.out.println("조회서비스 종료");
+                            break;
+                        case 3:
+                            //학생아이디,비밀번호 입력가정
+                            System.out.println("아이디로" + id + "입력됨");
+                            System.out.println("비밀번호로" + password + "입력됨");
+                            registService.deletemysubject(id, password);
+                            System.out.println("삭제서비스 종료");
+
                     }
                     break;
             }

@@ -1,5 +1,6 @@
 import persistence.DAO.RegistDAO;
 import persistence.DTO.CreatedsubjectDTO;
+import persistence.DTO.StudentDTO;
 import persistence.MybatisConnectionFactory;
 import service.RegistService;
 import view.RegistView;
@@ -76,7 +77,26 @@ public class Main {
                             System.out.println("비밀번호로" + password + "입력됨");
                             registService.deletemysubject(id, password);
                             System.out.println("삭제서비스 종료");
+                            break;
+                        case 4:
+                            //교수아이디,비밀번호 입력가정
+                            String proid="kimsung";
+                            String propass="kimpass";
+                            System.out.println("아이디로" + id + "입력됨");
+                            System.out.println("비밀번호로" + password + "입력됨");
 
+                                List<StudentDTO> onepagestudent =registService.pageselect(proid,propass);
+                                if(onepagestudent.size()==0)
+                                {
+
+                                    break;
+                                }
+                                else
+                                {
+                                    registView.print_stu_list(onepagestudent);
+                                }
+
+                            break;
                     }
                     break;
             }

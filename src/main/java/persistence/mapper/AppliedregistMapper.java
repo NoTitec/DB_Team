@@ -21,6 +21,11 @@ public interface AppliedregistMapper {
     @ResultMap("AppliedResultSet")
     List<AppliedregistDTO> get_stu_applylist(int stunumber);
 
+    @SelectProvider(type=persistence.mapper.AppliedregistSQL.class,method="select_limit_applylist")
+    //@Select("SELECT * FROM APPLIEDREGIST WHERE CREATED_SUBCODE LIKE #{selsubcode} ")
+    @ResultMap("AppliedResultSet")
+    List<AppliedregistDTO > get_applylist_by_subcode_page(@Param("selsubcode") String selsubcode,long page);
+
     @Insert("INSERT INTO APPLIEDREGIST (created_subcode, stu_num)\n"+
             "VALUES (#{fcreatedsubcode}, #{fstunum})")
     @Options(useGeneratedKeys = true, keyProperty = "applyautonum")

@@ -33,4 +33,11 @@ public interface CreatedsubjectMapper {
 
     @Update("update createdsubject set  stu_max=  stu_max+1  where created_subcode LIKE #{subname}")
     void update_max_num(@Param("subname")String selectsubjectcode);//1개 과목 maxstu 1명 추가
+
+    @Update("update createdsubject set  stu_max=  stu_max-1  where created_subcode LIKE #{subname}")
+    void update_max_num_minus(@Param("subname")String selectsubject);
+
+    @Select("SELECT * FROM CREATEDSUBJECT WHERE PRO_NUM LIKE #{pronum}")
+    @ResultMap("createdsubjectSet")
+    List<CreatedsubjectDTO>select_by_pronum(String pronum);
 }

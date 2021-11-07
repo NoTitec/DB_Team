@@ -24,5 +24,7 @@ public interface StudentMapper {
     @ResultMap("StudentResultSet")
     StudentDTO getonestudent_with_id_and_password(@Param("id") String id,@Param("password") String password);
 
-
+    @Select("SELECT * FROM STUDENT WHERE stu_num=#{num}")
+    @ResultMap("StudentResultSet")
+    StudentDTO getonestudent_with_id(@Param("num") int num);
 }

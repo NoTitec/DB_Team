@@ -11,7 +11,7 @@ public class ProfessorDTO {
     private String pronum;
     private String proid;
     private String propass;
-    private String name;
+    private String proname;
     private int proage;
     private String fmanid="master";
     private String progender;

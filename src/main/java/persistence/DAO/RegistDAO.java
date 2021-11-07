@@ -5,9 +5,11 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.TransactionIsolationLevel;
 import persistence.DTO.AppliedregistDTO;
 import persistence.DTO.CreatedsubjectDTO;
+import persistence.DTO.ProfessorDTO;
 import persistence.DTO.StudentDTO;
 import persistence.mapper.AppliedregistMapper;
 import persistence.mapper.CreatedsubjectMapper;
+import persistence.mapper.ProfessorMapper;
 import persistence.mapper.StudentMapper;
 
 import java.time.LocalDate;
@@ -38,6 +40,22 @@ public class RegistDAO {
         }
         return count;
     }
+    public String check_professor_dao(String id,String password){
+        String count="0";
+        SqlSession session = sqlSessionFactory.openSession();
+        ProfessorMapper mapper=session.getMapper(ProfessorMapper.class);
+        try {
+            count=mapper.check_by_pro_id_and_password(id,password);
+            session.commit();
+        }catch (Exception e){
+            e.printStackTrace();
+            session.rollback();
+        }
+        finally {
+            session.close();
+        }
+        return count;
+    }
     //현재 로그인한 학생 반환
     public StudentDTO get_student_by_id_password(String id,String password){
         StudentDTO one=null;
@@ -45,6 +63,23 @@ public class RegistDAO {
         StudentMapper mapper=session.getMapper(StudentMapper.class);
         try{
             one=mapper.getonestudent_with_id_and_password(id,password);
+            session.commit();
+        }catch (Exception e){
+            e.printStackTrace();
+            session.rollback();
+        }
+        finally {
+            session.close();
+        }
+        return one;
+    }
+    //학번으로 학생 반환
+    public StudentDTO get_one_stduent_by_id(int stunum){
+        StudentDTO one =null;
+        SqlSession session = sqlSessionFactory.openSession();
+        StudentMapper mapper=session.getMapper(StudentMapper.class);
+        try{
+            one=mapper.getonestudent_with_id(stunum);
             session.commit();
         }catch (Exception e){
             e.printStackTrace();
@@ -79,6 +114,24 @@ public class RegistDAO {
         AppliedregistMapper mapper=session.getMapper(AppliedregistMapper.class);
         try {
             list=mapper.get_stu_applylist(stunum);
+            session.commit();
+        }catch (Exception e){
+            e.printStackTrace();
+            session.rollback();
+        }
+        finally {
+            session.close();
+        }
+        return list;
+    }
+    //교수기준 자기과목 수강목록반환  dynamic function
+    public List<AppliedregistDTO> get_apllylist_by_selcode_and_page(String selsubcode,long page){
+
+        List<AppliedregistDTO> list=null;
+        SqlSession session = sqlSessionFactory.openSession();
+        AppliedregistMapper mapper=session.getMapper(AppliedregistMapper.class);
+        try{
+            list=mapper.get_applylist_by_subcode_page(selsubcode,page);
             session.commit();
         }catch (Exception e){
             e.printStackTrace();
@@ -139,7 +192,25 @@ public class RegistDAO {
         }
         return "종료";
     }
-
+    //선택과목 수강인원 -1function
+    public void update_created_subject_max_stu_minus(String selectsubject)
+    {
+        CreatedsubjectDTO one=null;
+        SqlSession session = sqlSessionFactory.openSession(TransactionIsolationLevel.SERIALIZABLE);
+        CreatedsubjectMapper mapper=session.getMapper(CreatedsubjectMapper.class);
+        try{
+            mapper.update_max_num_minus(selectsubject);
+            session.commit();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            session.rollback();
+        }
+        finally {
+            session.close();
+        }
+    }
     //수강신청 테이블 insert function
     public String insert_current_select_subject(AppliedregistDTO a){
         SqlSession session = sqlSessionFactory.openSession();
@@ -162,6 +233,7 @@ public class RegistDAO {
     }
     //수강신청 테이블 선택과목 삭제 function
     public void delete_current_select_subject(String selectsubject){
+
         SqlSession session = sqlSessionFactory.openSession();
         AppliedregistMapper mapper = session.getMapper(AppliedregistMapper.class);
         try{
@@ -173,10 +245,51 @@ public class RegistDAO {
             e.printStackTrace();
             session.rollback();
             session.close();
-            return;
         }
         finally {
             session.close();
         }
+
     }
+    //교수dto 1개 교수 id로 찾기
+    public ProfessorDTO get_professor_by_id(String proid){
+        ProfessorDTO onepro=null;
+        SqlSession session=sqlSessionFactory.openSession();
+        ProfessorMapper mapper = session.getMapper(ProfessorMapper.class);
+        try{
+
+            onepro=mapper.select_one_pro(proid);
+            session.commit();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            session.rollback();
+            session.close();
+
+        }
+        finally {
+            session.close();
+        }
+        return onepro;
+    }
+    //교수 자신담당 교과목 list 반환
+    public List<CreatedsubjectDTO> get_same_with_pronum(String pronum){
+        List<CreatedsubjectDTO> clist=null;
+        SqlSession session=sqlSessionFactory.openSession();
+        CreatedsubjectMapper mapper=session.getMapper(CreatedsubjectMapper.class);
+        try{
+            clist=mapper.select_by_pronum(pronum);
+            session.commit();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            session.rollback();
+            session.close();
+        }
+        finally {
+            session.close();
+        }
+        return clist;
+    }
+
 }

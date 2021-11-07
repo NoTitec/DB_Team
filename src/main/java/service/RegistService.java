@@ -3,6 +3,7 @@ package service;
 import persistence.DAO.RegistDAO;
 import persistence.DTO.AppliedregistDTO;
 import persistence.DTO.CreatedsubjectDTO;
+import persistence.DTO.ProfessorDTO;
 import persistence.DTO.StudentDTO;
 
 import java.time.LocalDate;
@@ -14,7 +15,11 @@ public class RegistService {
     private final RegistDAO registDAO;
     public RegistService(RegistDAO registDAO){this.registDAO=registDAO;}
 
-    public String check_student(String id,String password){//로그인체크함수
+    public String check_professor(String id,String password){//교수 로그인체크함수
+        String count=registDAO.check_professor_dao(id,password);
+        return count;
+    }
+    public String check_student(String id,String password){//학생 로그인체크함수
         String count=registDAO.check_student_dao(id,password);
         return count;
     }
@@ -41,8 +46,8 @@ public class RegistService {
             }
             System.out.println("---------------------------");
             //신청 과목 선택(선택했다고 가정 하드코딩)
-            System.out.println("학생이 CS0016 선택했다고 가정");
-            String selectsubject="CS0016";//현재 선택한 교과목 코드
+            System.out.println("학생이 CS0036 선택했다고 가정");
+            String selectsubject="CS0036";//현재 선택한 교과목 코드
             System.out.println("---------------------------");
             //선택한 교과목 수강 신청 가능 기간인지 확인
             CreatedsubjectDTO getsubject=registDAO.get_one_by_created_code(selectsubject);//현재선택과목
@@ -154,13 +159,81 @@ public class RegistService {
             //강의 1개 선택
             System.out.println("---------------------------");
             //신청 과목 선택(선택했다고 가정 하드코딩)
-            System.out.println("학생이 CS0016 선택했다고 가정");
-            String selectsubject="CS0016";//현재 선택한 교과목 코드
+            System.out.println("학생이 CS0036 선택했다고 가정");
+            String selectsubject="CS0036";//현재 선택한 교과목 코드
             System.out.println("---------------------------");
-
+            //개설교과목테이블 인원수 -1
+            registDAO.update_created_subject_max_stu_minus(selectsubject);
             //삭제
             registDAO.delete_current_select_subject(selectsubject);
             return;
+        }
+    }
+
+    public List<StudentDTO>pageselect(String proid,String propass){//교수의 담당과목 출력하고 과목선택시 학생 반환
+        List<StudentDTO> onelist=new ArrayList<>();
+        //교수로그인
+        String check=check_professor(proid,propass);
+        if(check.equals("0")){
+            System.out.println("id또는 비밀번호가 틀렸습니다");
+            return onelist;
+        }
+        else {
+            //자기담당교과목출력
+            System.out.println("로그인성공");
+            ProfessorDTO getprofessor=registDAO.get_professor_by_id(proid);//교수자기객체
+            String pronum=getprofessor.getPronum();//자기교번
+            System.out.println("pronum");
+            List<CreatedsubjectDTO> prosubjectlist= registDAO.get_same_with_pronum(pronum);//현재교수 강의 리스트
+            if(prosubjectlist.size()==0){
+                System.out.println("강의하는 과목이 없습니다");
+                return onelist;
+            }
+            for (CreatedsubjectDTO one:prosubjectlist) {
+                String onesubname=one.getCreatedsubname();
+                System.out.println(onesubname);
+                String onesubcode=one.getCreatedsubcode();
+                System.out.println(onesubcode);
+            }
+            //교과목선택
+            System.out.println("조회하고자하는 강의 선택");
+            System.out.println("CS0016선택 가정");
+            //cs0016 선택가정
+            String selectlecture="CS0016";
+            //교과목테이블에서 해당과목수강신청한학생수가져옴
+            CreatedsubjectDTO one=registDAO.get_one_by_created_code(selectlecture);
+
+            int stucount=one.getStumax();
+            System.out.println("수강신청한 학생수 : "+stucount);
+            //for문 총페이지출력
+            System.out.println("총 페이지 한페이지당 2명의 학생정보 출력");
+            for(int i=1;1<=stucount;i++){
+                System.out.print(i+" ");
+                stucount-=2;
+            }
+            System.out.println();
+            //페이지 선택
+            System.out.println("1 page 선택가정");
+            long selectpage=1;
+            long offset=0;
+            if(selectpage==1)
+            {
+                offset=0;
+            }
+            else {
+                offset=selectpage*2-2;
+            }
+            //선택과목 해당되는 등록정보 1page 크기만큼 동적sql로 가져옴
+            List<AppliedregistDTO>selsubcodelist=registDAO.get_apllylist_by_selcode_and_page(selectlecture,offset);
+
+            //selsubcodelist의 stunum으로 학생객체 1개씩 가져와서 onelist에 add
+            for (AppliedregistDTO aone:selsubcodelist) {
+                int stunum=aone.getFstunum();
+                    StudentDTO getaonestudent=registDAO.get_one_stduent_by_id(stunum);
+                    onelist.add(getaonestudent);
+            }
+            //학생리스트반환
+            return onelist;
         }
     }
 }

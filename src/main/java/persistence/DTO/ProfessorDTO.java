@@ -15,4 +15,5 @@ public class ProfessorDTO {
     private int proage;
     private String fmanid="master";
     private String progender;
+    private String prophonenumber;
 }

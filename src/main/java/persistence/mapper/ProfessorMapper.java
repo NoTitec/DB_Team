@@ -14,7 +14,8 @@ public interface ProfessorMapper {
             @Result(property = "proname",column = "pro_name"),
             @Result(property = "proage",column = "pro_age"),
             @Result(property = "fmanid",column = "man_id"),
-            @Result(property = "progender",column = "pro_gender")
+            @Result(property = "progender",column = "pro_gender"),
+            @Result(property = "prophonenumber",column = "pro_phonenumber")
     })
     List<ProfessorDTO> getAll();
 

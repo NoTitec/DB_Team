@@ -51,7 +51,7 @@ public class Main {
                 case 4:
                     System.out.println("원하는 소분류 기능 선택");
                     System.out.println("1.수강신청2.수강조회3.수강삭제 4.교수 자신과목 신청학생 조회");
-                    System.out.println("교과목 수강신청학생목록조회");
+
                     int fourthmenu = sc.nextInt();
                     String id = "kumid";
                     String password = "kumpass";
@@ -80,10 +80,11 @@ public class Main {
                             break;
                         case 4:
                             //교수아이디,비밀번호 입력가정
+                            System.out.println("교과목 수강신청학생목록조회");
                             String proid="kimsung";
                             String propass="kimpass";
-                            System.out.println("아이디로" + id + "입력됨");
-                            System.out.println("비밀번호로" + password + "입력됨");
+                            System.out.println("아이디로" + proid + "입력됨");
+                            System.out.println("비밀번호로" + propass + "입력됨");
 
                                 List<StudentDTO> onepagestudent =registService.pageselect(proid,propass);
                                 if(onepagestudent.size()==0)

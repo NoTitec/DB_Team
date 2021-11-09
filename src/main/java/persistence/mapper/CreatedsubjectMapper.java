@@ -37,7 +37,7 @@ public interface CreatedsubjectMapper {
     @Update("update createdsubject set  stu_max=  stu_max-1  where created_subcode LIKE #{subname}")
     void update_max_num_minus(@Param("subname")String selectsubject);
 
-    @Select("SELECT * FROM CREATEDSUBJECT WHERE PRO_NUM LIKE #{pronum}")
+    @Select("SELECT * FROM CREATEDSUBJECT WHERE PRO_NUM LIKE #{fpronum}")
     @ResultMap("createdsubjectSet")
     List<CreatedsubjectDTO>select_by_pronum(String pronum);
 }

@@ -67,7 +67,7 @@ public class RegistService {
             }
             //선택한 교과목 시작시간이 현재 시간표시작시간과 겹치는게 있는지 확인
             boolean flag=true;
-            //CreatedsubjectDTO getsubject=registDAO.get_one_by_created_code(selectsubject);//현재선택과목
+
             StudentDTO getstudent=registDAO.get_student_by_id_password(id, password);//현재학생
 
             int stunum=getstudent.getStunum();//현재학생 학번

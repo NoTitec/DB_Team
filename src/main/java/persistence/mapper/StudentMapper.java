@@ -13,7 +13,8 @@ public interface StudentMapper {
             @Result(property = "stuname",column = "stu_name"),
             @Result(property = "stuage",column = "stu_age"),
             @Result(property = "fmanid",column = "man_id"),
-            @Result(property = "stugender",column = "stu_gender")
+            @Result(property = "stugender",column = "stu_gender"),
+            @Result(property = "stugrade",column = "stu_grade")
     })
     List<StudentDTO> getallstudent();
 

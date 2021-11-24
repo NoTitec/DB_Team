@@ -15,4 +15,5 @@ public class StudentDTO {
     private int stuage;
     private String fmanid="master";
     private String stugender;
+    private int stugrade;
 }

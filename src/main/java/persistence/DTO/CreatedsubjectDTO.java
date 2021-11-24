@@ -18,7 +18,7 @@ public class CreatedsubjectDTO {
     private int stumax;
     private String room;
     private LocalTime classstarttime;
-    private int classduration;
+    private LocalTime classendtime;
     private String classplan;
     private LocalDate planstartdate;
     private LocalDate planenddate;
@@ -26,4 +26,5 @@ public class CreatedsubjectDTO {
     private LocalDate applyenddate;
     private String fmanid="master";
     private String fpronum;
+    private int subday;
 }

@@ -16,14 +16,15 @@ public interface CreatedsubjectMapper {
             @Result(property = "stumax",column = "stu_max"),
             @Result(property = "room",column = "room"),
             @Result(property = "classstarttime",column = "class_start_time"),
-            @Result(property = "classduration",column = "class_duration"),
+            @Result(property = "classendtime",column = "class_end_time"),
             @Result(property = "classplan",column = "class_plan"),
             @Result(property = "planstartdate",column = "plan_start_date"),
             @Result(property = "planenddate",column = "plan_end_date"),
             @Result(property = "applystartdate",column = "apply_start_date"),
             @Result(property = "applyenddate",column = "apply_end_date"),
             @Result(property = "fmanid",column = "man_id"),
-            @Result(property = "fpronum",column = "pro_num")
+            @Result(property = "fpronum",column = "pro_num"),
+            @Result(property = "subday",column = "created_sub_day")
     })
     List<CreatedsubjectDTO> get_all_createdsubject();
 

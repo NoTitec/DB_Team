@@ -5,18 +5,199 @@ import persistence.MybatisConnectionFactory;
 import service.RegistService;
 import view.RegistView;
 
+import javax.imageio.IIOException;
+import java.io.*;
+import java.net.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        RegistDAO registDAO = new RegistDAO(MybatisConnectionFactory.getSqlSessionFactory());
+        //
+        ServerSocket s=null;
+        Socket conn=null;
+
+        try
+        {
+            s=new ServerSocket();
+            s.setReuseAddress(true);
+            InetAddress Address=InetAddress.getLocalHost();
+            SocketAddress addr=new InetSocketAddress(Address,3000);
+            s.bind(addr);
+            System.out.println("waiting for client");
+
+            while(true)
+            {
+                conn=s.accept();
+                System.out.println("from ip:"+conn.getInetAddress().getHostAddress()+"port:"+conn.getPort());
+
+                new client_handle(conn).start();
+            }
+        }
+        catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+        try
+        {
+            s.close();
+        }
+        catch (IOException ioException)
+        {
+            System.err.println("unable to close");
+        }
+        //
+
+        ///
+        //밑에 주석처리문장있던위치
+        ///
+    }
+}
+
+class client_handle extends Thread{
+    private Socket conn;
+    boolean program_stop=false;
+    RegistDAO registDAO = new RegistDAO(MybatisConnectionFactory.getSqlSessionFactory());
+    RegistService registService = new RegistService(registDAO);
+    RegistView registView = new RegistView();
+    client_handle(Socket conn)
+    {
+        this.conn=conn;
+    }
+
+    public void run() {
+        //List<CreatedsubjectDTO> r = registService.getmysubject("kumid","kumpass");
+        //registView.print_stu_subject(r);
+        String stuid;//학생로그인성공시 아이디저장
+        String stupwd;//학생로그인성공시 비밀번호저장
+        InputStream is;
+        BufferedInputStream bis;//버퍼수신스트림
+        OutputStream os;
+        BufferedOutputStream bos;//버퍼송신스트림
+        boolean programout=false;
+        int count=0;//로그인시도횟수
+        try{
+            is=conn.getInputStream();
+            bis=new BufferedInputStream(is);
+            os=conn.getOutputStream();
+            bos=new BufferedOutputStream(os);
+
+            Rprotocol proto=new Rprotocol(Rprotocol.ACCOUNT_INFO_REQ,Rprotocol.PT_UNDEFINED,Rprotocol.WHO_INFO_REQ);
+            bos.write(proto.getPacket());
+            bos.flush();
+
+            do{
+            proto=new Rprotocol();
+            byte[] buf = proto.getPacket();
+
+            bis.read(buf);//패킷수신
+            int packetType=buf[0];int packetstuType=buf[1];int packetCode=buf[2];
+                System.out.print("type "+packetType);
+                System.out.print(" stutype "+packetstuType);
+                System.out.println(" code "+packetCode);
+
+            //수신받은 패킷에서 type,stutype,code따라 동작수행
+                if(packetstuType==-1){
+                    byte[] slicecount;
+                    int datalen;
+                    byte[] data;
+                    switch(packetType){
+                        case Rprotocol.ACCOUNT_INFO_RESULT:
+                            switch(packetCode){
+                                case Rprotocol.STU_LOGIN_FAIL_CODE:
+                                    System.out.println("해당클라이언트3번이상 실패로 종료함");
+                                    programout=true;
+                            }
+                        case Rprotocol.ACCOUNT_INFO_ANS:
+
+                            switch(packetCode){
+                                case Rprotocol.STU_ID_PWD_ANS_CODE:
+                                    System.out.println("클라이언트가 idpwd보냄");
+                                    String[] temp=new String[2];
+                                    int k=3;
+                                    for(int i=0;i<2;i++) {
+
+                                        slicecount = Arrays.copyOfRange(buf, k, k + 4);
+                                        datalen = proto.byteArrayToInt(slicecount);
+                                        System.out.println(datalen);
+                                        k=k+4;
+                                        data = Arrays.copyOfRange(buf, k, k + datalen);
+                                        temp[i]=new String(data);
+                                        k=k+datalen;
+                                    }
+                                    //추출한 id pwd로 db에서 일치학생있는지 확인 3번까지 허용
+                                    if(count==3){
+                                        proto=new Rprotocol(Rprotocol.ACCOUNT_INFO_RESULT,Rprotocol.PT_UNDEFINED,Rprotocol.STU_LOGIN_FAIL_CODE);
+                                        bos.write(proto.getPacket());
+                                        bos.flush();
+                                    }
+                                    if(count<3) {
+                                        String check = registService.check_student(temp[0], temp[1]);
+                                        if (check.equals("0")) {
+                                            System.out.println("일치정보없음");
+                                            count++;
+                                            proto=new Rprotocol(Rprotocol.ACCOUNT_INFO_REQ,Rprotocol.PT_UNDEFINED,Rprotocol.STU_ID_PWD_REQ_CODE);
+                                            bos.write(proto.getPacket());
+                                            bos.flush();
+                                            break;
+                                        }
+                                        else {
+                                            System.out.println("로그인성공");
+                                            proto=new Rprotocol(Rprotocol.ACCOUNT_INFO_RESULT,Rprotocol.PT_UNDEFINED,Rprotocol.STU_LOGIN_SUCCESS_CODE);
+                                            bos.write(proto.getPacket());
+                                            bos.flush();
+                                            break;
+                                        }
+                                    }
+
+                                    break;
+                                case Rprotocol.WHO_INFO_ANS:
+                                    slicecount = Arrays.copyOfRange(buf, 3, 3+4);
+                                    datalen=proto.byteArrayToInt(slicecount);
+                                    data=Arrays.copyOfRange(buf,7,7+datalen);
+                                    String roll=new String(data);
+                                    if(roll.equals("1")){
+                                        proto=new Rprotocol(Rprotocol.ACCOUNT_INFO_REQ,Rprotocol.PT_UNDEFINED,Rprotocol.WHO_INFO_REQ);
+                                        bos.write(proto.getPacket());
+                                        bos.flush();
+                                    }
+                                    else if(roll.equals("2")){
+                                        proto=new Rprotocol(Rprotocol.ACCOUNT_INFO_REQ,Rprotocol.PT_UNDEFINED,Rprotocol.WHO_INFO_REQ);
+                                        bos.write(proto.getPacket());
+                                        bos.flush();
+                                    }
+                                    else if(roll.equals("3")){
+                                        proto=new Rprotocol(Rprotocol.ACCOUNT_INFO_REQ,Rprotocol.PT_UNDEFINED,Rprotocol.STU_ID_PWD_REQ_CODE);
+                                        bos.write(proto.getPacket());
+                                        bos.flush();
+                                    }
+                                    else{
+                                        System.out.println("somthing wrong");
+                                    }
+                                    break;
+
+                            }
+                            break;
+                    }
+                }
+                else{
+
+                }
+            }while(!programout);
+            conn.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+}
+
+        /*RegistDAO registDAO = new RegistDAO(MybatisConnectionFactory.getSqlSessionFactory());
         RegistService registService = new RegistService(registDAO);
         RegistView registView = new RegistView();
 
         Scanner sc = new Scanner(System.in);
-
-
 
         while (true) {
             System.out.println("원하는 대분류 기능 선택 종료는 -1 입력");
@@ -101,6 +282,4 @@ public class Main {
                     }
                     break;
             }
-        }
-    }
-}
+        }*/

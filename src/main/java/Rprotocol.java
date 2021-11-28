@@ -28,6 +28,7 @@ public class Rprotocol {
     public static final int SUJECT_PLAN_RESULT = 40;//강의 계획서 결과
     public static final int MY_TIMETABLE_REQ = 41;//시간표 요청
     public static final int ACCOUNT_INFO_RESULT = 99;//로그인 결과
+    public static final int MENU_REQ=100;//메뉴요청
     //------------------------------------------------------------------------------------
     //CODE정보
     //TYPE01
@@ -126,30 +127,38 @@ public class Rprotocol {
                                 packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
                                 break;
                         }
+                        break;
+                    case MENU_REQ:
+                        packet= new byte[LEN_PROTOCOL_TYPE+ STU_LEN_PROTOCOL_TYPE + LEN_CODE];
                 }
             } else {//학생관련 프로토콜
 
                 switch (stuprotocoltype) {
-                    case Rprotocol.REGIST_REQ:
+                    case REGIST_REQ:
                         switch (protocolCode) {
                             case Rprotocol.REGIST_REQ_CODE:
                                 packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
                                 break;
+                            case Rprotocol.REGIST_CANCEL_CODE:
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
                         }
-                    case Rprotocol.CREATE_SUBJECT_INFO_ANS:
+
+                        break;
+                    case CREATE_SUBJECT_INFO_ANS:
                         switch (protocolCode) {
                             case Rprotocol.CREAT_SUBJECT_GRADE_CODE:
                                 packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
                         }
                         break;
-                    case Rprotocol.SEL_SUBJECT_ANS:
+                    case SEL_SUBJECT_ANS:
                         switch (protocolCode) {
                             case SELECT_REGIST_SUBJECT_CODE:
+                            case SELECT_CANCLE_SUBJECT_CODE:
                                 packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + 50];
                                 break;
                         }
                         break;
-                    case Rprotocol.REGIST_RESULT:
+                    case REGIST_RESULT:
                         switch (protocolCode) {
                             case REGIST_SUCESS_CODE:
                             case NOT_REGIST_DAY_CODE:
@@ -158,6 +167,16 @@ public class Rprotocol {
                                 packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
                                 break;
                         }
+                        break;
+                    case MY_REGIST_ANS:
+                        switch (protocolCode){
+                            case SUBJECT_CODE_INFO_CODE:
+                                packet= new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
+                                break;
+                        }
+                        break;
+                    case REGIST_CANSEL_RESULT:
+                        packet= new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
                         break;
                 }
             }

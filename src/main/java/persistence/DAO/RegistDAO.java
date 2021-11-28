@@ -249,13 +249,13 @@ public class RegistDAO {
         return "신청정상처리";
     }
     //수강신청 테이블 선택과목 삭제 function
-    public void delete_current_select_subject(String selectsubject){
+    public void delete_current_select_subject(int stunum,String selectsubject){
 
         SqlSession session = sqlSessionFactory.openSession();
         AppliedregistMapper mapper = session.getMapper(AppliedregistMapper.class);
         try{
 
-            mapper.deleteselect_apply_subject(selectsubject);
+            mapper.deleteselect_apply_subject(stunum,selectsubject);
             session.commit();
         }
         catch(Exception e){

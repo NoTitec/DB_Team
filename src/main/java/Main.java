@@ -1,4 +1,5 @@
 import persistence.DAO.RegistDAO;
+import persistence.DTO.AppliedregistDTO;
 import persistence.DTO.CreatedsubjectDTO;
 import persistence.DTO.StudentDTO;
 import persistence.MybatisConnectionFactory;
@@ -21,8 +22,7 @@ public class Main {
         try {
             s = new ServerSocket();
             s.setReuseAddress(true);
-            //InetAddress Address = InetAddress.getLocalHost();
-            InetAddress Address=InetAddress.getByName("127.0.0.1");
+            InetAddress Address = InetAddress.getLocalHost();
             System.out.println(Address.getHostAddress());
             SocketAddress addr = new InetSocketAddress(Address, 3000);
             s.bind(addr);
@@ -71,11 +71,13 @@ class client_handle extends Thread {
         OutputStream os;
         BufferedOutputStream bos;//버퍼송신스트림
 
-        StudentDTO getstudent;//학생로그인성공시 학생정보저장
         String stuid="";//학생로그인성공시 아이디저장
         String stupwd="";//학생로그인성공시 비밀번호저장
         int stugrade=0;//학생로그인성공시 학생학년저장
+        int clistcount;//과목목록개수정보저장
+        StudentDTO getstudent;//학생로그인성공시 학생정보저장
         List<CreatedsubjectDTO> clist=null;//과목 정보 리스트저장
+        List<AppliedregistDTO> alist=null;//수강신청정보리스트저장
         boolean clientout = false;//클라이언트종료변수
         int count = 0;//로그인시도횟수
         try {
@@ -116,6 +118,7 @@ class client_handle extends Thread {
                                     System.out.println("해당클라이언트3번이상 실패로 종료함");
                                     clientout = true;
                             }
+                            //------------------------------------------
                         case Rprotocol.ACCOUNT_INFO_ANS:
 
                             switch (packetCode) {
@@ -185,6 +188,13 @@ class client_handle extends Thread {
 
                             }
                             break;
+                            //--------------------------------
+                        case Rprotocol.MENU_REQ:
+                            //로그인성공은 아니지만 클라이언트가 메뉴요청 패킷보내면 이패킷을 만들어 보낸다 그러면클라이언트는 메뉴출력을 한다
+                            proto = new Rprotocol(Rprotocol.ACCOUNT_INFO_RESULT, Rprotocol.PT_UNDEFINED, Rprotocol.STU_LOGIN_SUCCESS_CODE);
+                            bos.write(proto.getPacket());
+                            bos.flush();
+                            break;
                     }
                 } else {//학생관련 타입
                     switch (packetstuType) {
@@ -194,7 +204,7 @@ class client_handle extends Thread {
                                     System.out.println("클라이언트가 수강신청요청보냄");
                                     //현재학생학년과같은 개설교과목 목록 전송
                                     clist=registDAO.get_grade_created_subject(stugrade);//학생학년과일치과목목록
-                                    int clistcount=clist.size();//과목개수
+                                    clistcount=clist.size();//과목개수
                                     temp=new byte[Rprotocol.LEN_MAX];//과목수,과목코드,과목이름저장할임시배열
                                     System.arraycopy(proto.intto4byte(clistcount),0,temp,0,proto.intto4byte(clistcount).length);
                                     pos=4;
@@ -221,8 +231,38 @@ class client_handle extends Thread {
                                     bos.flush();
                                     break;
 
+                                case Rprotocol.REGIST_CANCEL_CODE:
+                                    System.out.println("클라이언트가 수강취소요청보냄");
+                                    temp=new byte[Rprotocol.LEN_MAX];//과목수,과목코드,과목이름저장할임시배열
+                                    clist=registService.getmysubject(stuid,stupwd);
+                                    clistcount=clist.size();
+                                    System.arraycopy(proto.intto4byte(clistcount),0,temp,0,proto.intto4byte(clistcount).length);
+                                    pos=4;
+                                    for (CreatedsubjectDTO one:clist) {
+                                        int onesubjectcodelen=one.getCreatedsubcode().length();
+                                        System.arraycopy(proto.intto4byte(onesubjectcodelen),0,temp,pos,proto.intto4byte(onesubjectcodelen).length);
+                                        pos+=4;
+                                        System.arraycopy(one.getCreatedsubcode().getBytes(),0,temp,pos,one.getCreatedsubcode().getBytes().length);
+
+                                        pos+=one.getCreatedsubcode().getBytes().length;
+                                        //한글데이터는 길이계산이다르므로 반드시 getBytes.length로 길이정보획득해야함----------------------------
+                                        byte[] subnamebyte=one.getCreatedsubname().getBytes();
+                                        int onesubjectnamelen=subnamebyte.length;
+                                        System.arraycopy(proto.intto4byte(onesubjectnamelen),0,temp,pos,proto.intto4byte(onesubjectnamelen).length);
+                                        pos+=4;
+                                        System.arraycopy(one.getCreatedsubname().getBytes(),0,temp,pos,one.getCreatedsubname().getBytes().length);
+                                        pos+=one.getCreatedsubname().getBytes().length;
+                                    }
+                                    proto.setPacket_type_and_code(Rprotocol.PT_UNDEFINED, Rprotocol.MY_REGIST_ANS, Rprotocol.SUBJECT_CODE_INFO_CODE);
+                                    System.out.println();
+                                    proto.setPacket(Rprotocol.PT_UNDEFINED, Rprotocol.MY_REGIST_ANS, Rprotocol.SUBJECT_CODE_INFO_CODE, temp);
+
+                                    bos.write(proto.getPacket());
+                                    bos.flush();
+                                    break;
                             }
                             break;
+                            //-----------------------------------
                         case Rprotocol.SEL_SUBJECT_ANS:
                             switch (packetCode){
                                 case Rprotocol.SELECT_REGIST_SUBJECT_CODE:
@@ -272,10 +312,23 @@ class client_handle extends Thread {
                                     }
 
                                     break;
+                                case Rprotocol.SELECT_CANCLE_SUBJECT_CODE:
+                                    datalen=proto.byteArrayToInt(Arrays.copyOfRange(buf,pos,pos+4));//4byte 길이정보 int 변환
+                                    pos+=4;//4byte 읽었으므로 pos를 4만큼 증가
 
+                                    temp = Arrays.copyOfRange(buf, pos, pos+datalen);//추출한길이만큼읽어 코드추출
+                                    temps= new String(temp);//추출 과목코드를  string으로 변환하여 저장
+
+                                    System.out.println("클라가선택한 코드:"+temps);
+                                    registService.deletemysubject(stuid,stupwd,temps);
+                                    System.out.println("수강취소완료");
+                                    proto.setPacket(Rprotocol.PT_UNDEFINED, Rprotocol.REGIST_CANSEL_RESULT, Rprotocol.PT_UNDEFINED);
+                                    bos.write(proto.getPacket());
+                                    bos.flush();
                             }
 
                             break;
+                            //---------------------------------
                     }
                 }
             } while (!clientout);

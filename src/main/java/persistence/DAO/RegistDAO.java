@@ -107,6 +107,23 @@ public class RegistDAO {
         }
         return list;
     }
+    //파라미터로받은 학생학년과 같은 개설과목학년인 과목 반환function
+    public List<CreatedsubjectDTO> get_grade_created_subject(int grade){
+        List<CreatedsubjectDTO> list = null;
+        SqlSession session = sqlSessionFactory.openSession();
+        CreatedsubjectMapper mapper=session.getMapper(CreatedsubjectMapper.class);
+        try {
+            list=mapper.get_grade_createdsubject(grade);
+            session.commit();
+        }catch (Exception e){
+            e.printStackTrace();
+            session.rollback();
+        }
+        finally {
+            session.close();
+        }
+        return list;
+    }
     //학생의 수강목록반환 function
     public  List<AppliedregistDTO> get_same_with_stunum(int stunum){
         List<AppliedregistDTO> list =null;

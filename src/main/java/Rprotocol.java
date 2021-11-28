@@ -41,15 +41,33 @@ public class Rprotocol {
     public static final int STU_LOGIN_FAIL_CODE = 4;//학생로그인 실패
 
     //STUTYPE30
+    public static final int REGIST_REQ_CODE = 1;
+    public static final int REGIST_CANCEL_CODE = 2;
     //STUTYPE31
+    public static final int CREAT_SUBJECT_GRADE_CODE = 1;
+    public static final int CREAT_SUBJECT_GRADE_ALL_CODE = 2;
+    public static final int CREAT_SUBJECT_GRADE_ALL_AND_PLAN_CODE = 3;
     //STUTYPE32
+    public static final int SELECT_REGIST_SUBJECT_CODE = 1;
+    public static final int SELECT_CANCLE_SUBJECT_CODE = 2;
+    public static final int SELECT_PLAN_SUBJECT_CODE = 3;
     //STUTYPE33
+    public static final int SUBJECT_CODE_INFO_CODE = 1;
+    public static final int SUBJECT_TIME_INFO_CODE = 2;
     //STUTYPE34
+    public static final int REGIST_SUCESS_CODE = 1;
+    public static final int NOT_REGIST_DAY_CODE = 2;
+    public static final int DUP_TIME_CODE = 3;
+    public static final int MAX_STU_CODE = 4;
     //STUTYPE35
     //STUTYPE36
+    public static final int PWD_UPDATE_REQ_CODE = 1;
+    public static final int PWD_UPDATE_IN_REQ_CODE = 2;
     //STUTYPE37
     //STUTYPE38
     //STUTYPE39
+    public static final int SIMPLE_LOOK_CODE = 1;
+    public static final int SUBJECT_PLAN_REQ_CODE = 2;
     //STUTYPE40
     //STUTYPE41
 
@@ -80,14 +98,14 @@ public class Rprotocol {
             if (stuprotocoltype == PT_UNDEFINED) {//학생관련프로토콜값이 -1이면 다른 타입
                 switch (protocolType) {
                     case PT_UNDEFINED:
-                        packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE+LEN_MAX];
+                        packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
                         break;
                     case ACCOUNT_INFO_REQ:
                         switch (protocolCode) {
                             case PT_UNDEFINED:
                             case STU_ID_PWD_REQ_CODE://id,pwd요청(서버)
                             case WHO_INFO_REQ://직책정보요청(서버)
-                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE+LEN_MAX];
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
                                 break;
                         }
                         break;
@@ -96,7 +114,7 @@ public class Rprotocol {
                             case PT_UNDEFINED:
                             case WHO_INFO_ANS://직책정보응답(클라)
                             case STU_ID_PWD_ANS_CODE://id,pwd 입력값(클라)
-                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE+LEN_MAX];
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
                                 break;
                         }
                         break;
@@ -109,10 +127,38 @@ public class Rprotocol {
                                 break;
                         }
                 }
-            } else {
+            } else {//학생관련 프로토콜
 
-                switch (stuprotocoltype) {//학생관련 프로토콜
-
+                switch (stuprotocoltype) {
+                    case Rprotocol.REGIST_REQ:
+                        switch (protocolCode) {
+                            case Rprotocol.REGIST_REQ_CODE:
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
+                                break;
+                        }
+                    case Rprotocol.CREATE_SUBJECT_INFO_ANS:
+                        switch (protocolCode) {
+                            case Rprotocol.CREAT_SUBJECT_GRADE_CODE:
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
+                        }
+                        break;
+                    case Rprotocol.SEL_SUBJECT_ANS:
+                        switch (protocolCode) {
+                            case SELECT_REGIST_SUBJECT_CODE:
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + 50];
+                                break;
+                        }
+                        break;
+                    case Rprotocol.REGIST_RESULT:
+                        switch (protocolCode) {
+                            case REGIST_SUCESS_CODE:
+                            case NOT_REGIST_DAY_CODE:
+                            case DUP_TIME_CODE:
+                            case MAX_STU_CODE:
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
+                                break;
+                        }
+                        break;
                 }
             }
         }
@@ -123,11 +169,16 @@ public class Rprotocol {
     }
 
     //write할 buf 바이트배열 타입,코드에맞게 생성한 packet으로 복사해줌
-    public void setPacket(int pt, int spt, int code, byte[] buf) {
+    public void setPacket(int pt, int spt, int code) {//data없는경우
+        packet = null;
+        packet = getPacket(pt, spt, code);
+    }
+
+    public void setPacket(int pt, int spt, int code, byte[] buf) {//data있는경우
         packet = null;
         packet = getPacket(pt, spt, code);
         System.arraycopy(buf, 0, packet, 3, buf.length);
-        packet[3+buf.length-1]='\0';
+        packet[3 + buf.length - 1] = '\0';
     }
 
     public byte[] intto4byte(int intvalue) {//int값을 4byte byte배열로 전환후 반환
@@ -151,8 +202,11 @@ public class Rprotocol {
                 (byte) ((data >> 0) & 0xff),
         };
     }
-    public void setPacket_type_and_code(int type,int stutype,int code){
-        packet[0]=(byte)type; packet[1]=(byte)stutype; packet[2]=(byte)code;
+
+    public void setPacket_type_and_code(int type, int stutype, int code) {
+        packet[0] = (byte) type;
+        packet[1] = (byte) stutype;
+        packet[2] = (byte) code;
 
     }
 

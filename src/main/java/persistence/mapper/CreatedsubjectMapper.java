@@ -28,6 +28,11 @@ public interface CreatedsubjectMapper {
     })
     List<CreatedsubjectDTO> get_all_createdsubject();
 
+
+    @Select("SELECT * FROM CREATEDSUBJECT WHERE CREATED_SUB_GRADE = #{grade}")
+    @ResultMap("createdsubjectSet")
+    List<CreatedsubjectDTO> get_grade_createdsubject(int grade);
+
     @Select("SELECT * FROM CREATEDSUBJECT WHERE CREATED_SUBCODE LIKE #{code}")
     @ResultMap("createdsubjectSet")
     CreatedsubjectDTO select_by_subcode(@Param("code") String selectsubject);//1개 교과목 code로 찾아서 반환

@@ -23,84 +23,76 @@ public class RegistService {
         String count=registDAO.check_student_dao(id,password);
         return count;
     }
-    public void regist(String id,String password){//수강신청 로직
-        String check=check_student(id,password);
-        if(check.equals("0")){
-            System.out.println("id또는 비밀번호가 틀렸습니다");
-            return;
-        }
-        else
-        {
-            System.out.println("--------------");
-            System.out.println("학생 로그인 성공");
-            System.out.println("--------------");
-            //개설 과목 정보 출력 dao
-            List<CreatedsubjectDTO> list=registDAO.get_all_created_subject();
-            System.out.println("-----개설 과목 목록--------");
-            for(CreatedsubjectDTO csubject:list) {
-                System.out.print("과목이름:"+csubject.getCreatedsubname()+" ");
-                System.out.print("과목코드:"+csubject.getCreatedsubcode()+" ");
-                System.out.print("현재수강신청인원:"+csubject.getStumax()+" ");
-                System.out.print("강의시작시간:"+csubject.getClassstarttime()+" ");
-                System.out.println();
-            }
-            System.out.println("---------------------------");
-            //신청 과목 선택(선택했다고 가정 하드코딩)
-            System.out.println("학생이 CS0036 선택했다고 가정");
-            String selectsubject="CS0036";//현재 선택한 교과목 코드
-            System.out.println("---------------------------");
+    public int regist_check(String id,String password,String selsubcode){//수강신청 가능 확인 로직
+            LocalDate nowdate=LocalDate.now();//현재시간
+            String selectsubject=selsubcode;//현재 선택한 교과목 코드
             //선택한 교과목 수강 신청 가능 기간인지 확인
             CreatedsubjectDTO getsubject=registDAO.get_one_by_created_code(selectsubject);//현재선택과목
-            LocalDate applystartdate=getsubject.getApplystartdate();
-            LocalDate applyenddate=getsubject.getApplyenddate();
-            LocalDate nowdate=LocalDate.now();
+            LocalDate applystartdate=getsubject.getApplystartdate();//수강신청가능일
+            LocalDate applyenddate=getsubject.getApplyenddate();//수강신청종료일
+
             if(nowdate.isAfter(applystartdate)&& nowdate.isBefore(applyenddate))
             {
-                System.out.println("------------------");
                 System.out.println("수강신청 가능 날짜");
-                System.out.println("-------------------");
             }
             else
             {
                 System.out.println("현재 수강신청 불가 날짜입니다 수강신청 가능일"+applystartdate+"부터"+applyenddate);
-                return;
+                return 2;
             }
-            //선택한 교과목 시작시간이 현재 시간표시작시간과 겹치는게 있는지 확인
+            //선택한 교과목 요일,시작시간~종료시간 이 현재 학생 시간표시작시간과 겹치는게 있는지 확인
             boolean flag=true;
 
             StudentDTO getstudent=registDAO.get_student_by_id_password(id, password);//현재학생
 
             int stunum=getstudent.getStunum();//현재학생 학번
             List<AppliedregistDTO> studentapplylist= registDAO.get_same_with_stunum(stunum);//현재학생 수강 리스트
-            LocalTime cursubstarttime=getsubject.getClassstarttime();//현재선택과목 시간
-            for (AppliedregistDTO one:studentapplylist) {
+
+            int day=getsubject.getSubday();//강의요일
+            LocalTime starttime=getsubject.getClassstarttime();//선택과목강의시작시간
+            LocalTime endtime=getsubject.getClassendtime();//선택과목강의종료시간
+            for (AppliedregistDTO one:studentapplylist) {//학생이 수강중인 과목을 1개씩 가져와서 선택과목과 시간겹치는게있으면 flag flase바꿈
                 String onesubcode=one.getFcreatedsubcode();
                 CreatedsubjectDTO onesubject= registDAO.get_one_by_created_code(onesubcode);
-                if(cursubstarttime==onesubject.getClassstarttime()){
-                    flag=false;
-                    break;
+                if(day==onesubject.getSubday()){//강의요일이 동일하면 시간겹치는지 비교교
+                    System.out.println("강의요일같으므로 시간 겹치는지 비교");
+                    //선택과목 시작시간이 과목시간사이에있거나 종료시간이 과목시간사이면 false
+                    if(((starttime.isAfter(onesubject.getClassstarttime())&&starttime.isBefore(onesubject.getClassendtime()))||(endtime.isAfter(onesubject.getClassstarttime())&&endtime.isBefore(onesubject.getClassendtime())))) {
+                        flag = false;
+                        break;
+                    }//똑같은 과목 중복신청하면 false
+                    else if(starttime.equals(onesubject.getClassstarttime())||endtime.equals(onesubject.getClassendtime())){
+                        flag=false;
+                        break;
+                    }
                 }
             }
             if(flag==false){
                 System.out.println("현재 시간표와 겹치는 시간이므로 수강신청이 불가합니다");
-                return;
+                return 3;
             }
-            //개설교과목 update 트랜젝션 수행 table 락걸음 update 실패시 인원초과출력
-            String result=registDAO.update_created_subject_max_stu(selectsubject);
-            if(result.equals("실패"))
-            {
-                System.out.println("수강최대인원초과되어 수강신청이 불가합니다");
-                return;
-            }
-            //수강신청 table insert수행
-            AppliedregistDTO na=new AppliedregistDTO();
-            na.setFcreatedsubcode(selectsubject);
-            na.setFstunum(stunum);
-            String inresult=registDAO.insert_current_select_subject(na);
-            //신청완료출력
-            System.out.println(inresult);
-            return;
+            return 0;
         }
+    public int regist_excute(String id,String pwd,String selsubcode){//수강신청시 synchronize필수
+        StudentDTO getstudent=registDAO.get_student_by_id_password(id, pwd);//현재학생
+
+        int stunum=getstudent.getStunum();//현재학생 학번
+        //개설교과목 update 트랜젝션 수행 table 락걸음 update 실패시 인원초과출력
+        String result=registDAO.update_created_subject_max_stu(selsubcode);
+        if(result.equals("실패"))
+        {
+            System.out.println("수강최대인원초과되어 수강신청이 불가합니다");
+            return 4;
+        }
+        //수강신청 table insert수행
+        AppliedregistDTO na=new AppliedregistDTO();
+        na.setFcreatedsubcode(selsubcode);
+        na.setFstunum(stunum);
+        String inresult=registDAO.insert_current_select_subject(na);
+        //신청완료출력
+        System.out.println(inresult);
+        return 1;
+
     }
 
     public List<CreatedsubjectDTO>getmysubject(String id,String password){//현재학생 수강신청 정보 조회 로직

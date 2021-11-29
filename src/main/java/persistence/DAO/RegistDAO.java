@@ -90,6 +90,23 @@ public class RegistDAO {
         }
         return one;
     }
+    //학번에 해당하는 학생 비밀번호 변경
+    public void update_cur_student_password(String newpwd,int stunum){
+        SqlSession session = sqlSessionFactory.openSession();
+        StudentMapper mapper=session.getMapper(StudentMapper.class);
+        try{
+            mapper.update_with_new_password(newpwd, stunum);
+            session.commit();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            session.rollback();
+        }
+        finally {
+            session.close();
+        }
+        return;
+    }
     //개설과목 반환 function
     public List<CreatedsubjectDTO> get_all_created_subject(){
         List<CreatedsubjectDTO> list = null;

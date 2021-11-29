@@ -25,7 +25,7 @@ public class Rprotocol {
     public static final int STU_INFO_UPDATE_ANS = 37;//학생 정보 수정 응답
     public static final int STU_INFO_UPDATE_RESULT = 38;//학생 정보 수정 결과
     public static final int CREATE_SUBJECT_INFO_REQ = 39;//개설 교과목 정보 요청
-    public static final int SUJECT_PLAN_RESULT = 40;//강의 계획서 결과
+    public static final int SUBJECT_PLAN_RESULT = 40;//강의 계획서 결과
     public static final int MY_TIMETABLE_REQ = 41;//시간표 요청
     public static final int ACCOUNT_INFO_RESULT = 99;//로그인 결과
     public static final int MENU_REQ=100;//메뉴요청
@@ -144,16 +144,28 @@ public class Rprotocol {
                         }
 
                         break;
+                    case CREATE_SUBJECT_INFO_REQ:
+                        switch (protocolCode){
+                            case SIMPLE_LOOK_CODE:
+                            case SUBJECT_PLAN_REQ_CODE:
+                                packet=new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
+                            break;
+                        }
+                        break;
                     case CREATE_SUBJECT_INFO_ANS:
                         switch (protocolCode) {
                             case Rprotocol.CREAT_SUBJECT_GRADE_CODE:
+                            case Rprotocol.CREAT_SUBJECT_GRADE_ALL_CODE:
+                            case Rprotocol.CREAT_SUBJECT_GRADE_ALL_AND_PLAN_CODE:
                                 packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
+                                break;
                         }
                         break;
                     case SEL_SUBJECT_ANS:
                         switch (protocolCode) {
                             case SELECT_REGIST_SUBJECT_CODE:
                             case SELECT_CANCLE_SUBJECT_CODE:
+                            case SELECT_PLAN_SUBJECT_CODE:
                                 packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + 50];
                                 break;
                         }
@@ -171,12 +183,29 @@ public class Rprotocol {
                     case MY_REGIST_ANS:
                         switch (protocolCode){
                             case SUBJECT_CODE_INFO_CODE:
+                            case SUBJECT_TIME_INFO_CODE:
                                 packet= new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
                                 break;
                         }
                         break;
                     case REGIST_CANSEL_RESULT:
+                    case STU_INFO_UPDATE_RESULT:
+                    case MY_TIMETABLE_REQ:
                         packet= new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
+                        break;
+                    case STU_INFO_UPDATE_REQ:
+                        switch (protocolCode) {
+                            case PWD_UPDATE_REQ_CODE:
+                            case PWD_UPDATE_IN_REQ_CODE:
+                                packet = new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE];
+                                break;
+                        }
+                        break;
+                    case STU_INFO_UPDATE_ANS:
+                        packet=new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE+70];
+                        break;
+                    case SUBJECT_PLAN_RESULT:
+                        packet= new byte[LEN_PROTOCOL_TYPE + STU_LEN_PROTOCOL_TYPE + LEN_CODE + LEN_MAX];
                         break;
                 }
             }

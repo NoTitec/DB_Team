@@ -95,7 +95,7 @@ public class RegistService {
 
     }
 
-    public List<CreatedsubjectDTO>getmysubject(String id,String password){//현재학생 수강신청 정보 조회 로직
+    public List<CreatedsubjectDTO>getmysubject(String id,String password){//현재학생 수강신청 정보 get 로직
         List<CreatedsubjectDTO> stusubject=new ArrayList<>();//새로운 빈 리스트 생성
 
             //자기객체 가져오기

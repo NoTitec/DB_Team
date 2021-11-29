@@ -28,4 +28,7 @@ public interface StudentMapper {
     @Select("SELECT * FROM STUDENT WHERE stu_num=#{num}")
     @ResultMap("StudentResultSet")
     StudentDTO getonestudent_with_id(@Param("num") int num);
+
+    @Update("update student set stu_pass = #{password}  where stu_num = #{stunum}")
+    void update_with_new_password(@Param("password") String password,@Param("stunum") int stunum);
 }
